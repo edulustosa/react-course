@@ -1,3 +1,4 @@
+import { useEffect } from 'react';
 import {
   Form,
   Link,
@@ -5,11 +6,21 @@ import {
   useLoaderData,
   NavLink,
   useNavigation,
+  useSubmit,
 } from 'react-router-dom';
 
 export default function Home() {
-  const { contacts } = useLoaderData();
+  const { contacts, q } = useLoaderData();
   const navigation = useNavigation();
+  const submit = useSubmit();
+
+  const searching =
+    navigation.location &&
+    new URLSearchParams(navigation.location.search).has('q');
+
+  useEffect(() => {
+    document.getElementById('q').value = q;
+  }, [q]);
 
   return (
     <>
@@ -17,17 +28,23 @@ export default function Home() {
         <h1>React Router Contacts</h1>
 
         <div>
-          <form id="search-form" role="search">
+          <Form id="search-form" role="search">
             <input
               id="q"
+              className={searching ? 'loading' : ''}
               aria-label="Search contacts"
               placeholder="Search"
               type="search"
               name="q"
+              defaultValue={q}
+              onChange={(event) => {
+                const isFirstSearch = q == null;
+                submit(event.currentTarget.form, { replace: !isFirstSearch });
+              }}
             />
-            <div id="search-spinner" aria-hidden hidden={true} />
+            <div id="search-spinner" aria-hidden hidden={!searching} />
             <div className="sr-only" aria-live="polite"></div>
-          </form>
+          </Form>
 
           <Form method="POST">
             <button type="submit">New</button>
@@ -52,7 +69,8 @@ export default function Home() {
                         </>
                       ) : (
                         <i>No Name</i>
-                      )}{' '}
+                      )}
+
                       {contact.favorite && <span>★</span>}
                     </Link>
                   </NavLink>
